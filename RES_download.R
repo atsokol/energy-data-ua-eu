@@ -6,11 +6,11 @@ source("download_functions.R")
 # Generate a sequence of dates for the desired year
 dates <- seq(as.Date("2025-01-01"), Sys.Date(), by = "day")
 
-# Loop through the dates and download the data
+# Loop through the dates and download the data for all zones
 # gen = "1" is solar and gen = "2" is wind
-solar_list <- download_data_list(dates, gen = "1")
-data_solar <- do.call(rbind, solar_list)
+# Download data for all zones (1-4) and combine into single dataframe
+data_solar <- download_data_all_zones(dates, gen = "1", zonas = c("1", "2", "3", "4"))
 
-wind_list <- download_data_list(dates, gen = "2")
-data_wind <- do.call(rbind, wind_list)
+data_wind <- download_data_all_zones(dates, gen = "2", zonas = c("1", "2", "3", "4"))
+
 

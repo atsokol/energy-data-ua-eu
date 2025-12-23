@@ -30,8 +30,7 @@ end_date <- Sys.Date() - 1
 start_date_solar <- last_date_solar + 1
 if (start_date_solar <= end_date) {
     dates_new_solar <- seq(start_date_solar, end_date, by = "day")
-    solar_list_new <- download_data_list(dates_new_solar, gen = "1")
-    data_solar_new <- do.call(rbind, solar_list_new)
+    data_solar_new <- download_data_all_zones(dates_new_solar, gen = "1", zonas = c("1", "2", "3", "4"))
     if (!is.null(data_solar_new) && nrow(data_solar_new) > 0) {
         write.table(data_solar_new, csv_file_solar, sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
         message("Appended new solar data for dates: ", start_date_solar, " to ", end_date)
@@ -46,8 +45,7 @@ if (start_date_solar <= end_date) {
 start_date_wind <- last_date_wind + 1
 if (start_date_wind <= end_date) {
     dates_new_wind <- seq(start_date_wind, end_date, by = "day")
-    wind_list_new <- download_data_list(dates_new_wind, gen = "2")
-    data_wind_new <- do.call(rbind, wind_list_new)
+    data_wind_new <- download_data_all_zones(dates_new_wind, gen = "2", zonas = c("1", "2", "3", "4"))
     if (!is.null(data_wind_new) && nrow(data_wind_new) > 0) {
         write.table(data_wind_new, csv_file_wind, sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
         message("Appended new wind data for dates: ", start_date_wind, " to ", end_date)
