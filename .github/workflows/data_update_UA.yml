@@ -1,0 +1,55 @@
+name: UA data update
+
+on:
+  schedule:
+    # Runs at 20:00 UTC on the 1st day of each month
+    - cron: "0 20 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # so we can push back cleanly
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install R packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::dplyr
+            any::tidyr
+            any::purrr
+            any::readr
+            any::httr
+            any::jsonlite
+            any::lubridate
+            any::glue
+
+      - name: Update data
+        run: Rscript -e 'source("src/data_load_UA.R")'
+
+      - name: Commit and push updated data
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+           
+          git add "data_raw/yield_solar_UA.csv" || true
+          git add "data_raw/yield_wind_UA.csv" || true
+          git add "data_raw/DAM_UA.csv" || true
+
+          if ! git diff --staged --quiet; then
+            git commit -m "Update UA data"
+            git push
+          else
+            echo "No changes to commit"
+          fi
