@@ -5,7 +5,7 @@ Automated data collection system for renewable energy generation, electricity pr
 ## Data Sources
 
 ### Ukraine
-- **Solar and Wind Generation**: [GPEE (Guaranteed Buyer)](https://www.gpee.com.ua/main/loadCharts) - hourly generation data
+- **Solar and Wind Generation**: [GPEE (Guaranteed Buyer)](https://www.gpee.com.ua/) - hourly generation data
 - **Day-Ahead Market Prices**: [OREE (Market Operator)](https://www.oree.com.ua/) - hourly electricity prices
 - **Exchange Rates**: [National Bank of Ukraine](https://bank.gov.ua/) - daily UAH/EUR rates
 
