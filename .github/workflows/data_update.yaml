@@ -1,0 +1,62 @@
+name: Update UA and EU data
+
+on:
+  schedule:
+    # Runs at 20:00 UTC on the 1st day of each month
+    - cron: "0 20 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    env:
+      ENTSOE_PAT: ${{ secrets.ENTSOE_PAT }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+
+      - name: Install R packages
+        run: |
+          install.packages(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite", "lubridate", "glue", "remotes"))
+          remotes::install_github("krose/entsoeapi")
+        shell: Rscript {0}
+
+      - name: Update UA data
+        run: Rscript -e 'source("src/data_load_UA.R")'
+
+      - name: Update EU data
+        run: Rscript -e 'source("src/data_load_EU.R")'
+
+      - name: Commit and push updated data
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+           
+          git add "data/data_raw/yield_solar_UA.csv" || true
+          git add "data/data_raw/yield_wind_UA.csv" || true
+          git add "data/data_raw/DAM_UA.csv" || true
+          git add "data/data_raw/yield_RES_EU.csv" || true
+          git add "data/data_raw/DAM_EU.csv" || true
+          git add "data/data_raw/load_EU.csv" || true
+
+          if ! git diff --staged --quiet; then
+            git commit -m "Update UA and EU data"
+            git push
+          else
+            echo "No changes to commit"
+          fi
