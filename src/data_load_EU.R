@@ -6,6 +6,7 @@ library(readr)
 library(lubridate)
 library(entsoeapi)
 
+# Read ENTSOE_PAT from environment variable
 Sys.setenv(ENTSOE_PAT = Sys.getenv("ENTSOE_PAT"))
 
 source("src/helper_func_EU.R")
@@ -21,14 +22,23 @@ zones <- c(
 gen_types <- c("B16", "B19") # Solar and Wind onshore
 
 # Define end date - convert to datetime
-end_date <- floor_date(today(), "month")  # Last day of previous month
+end_date <- floor_date(today(), "month")  # First day of current month
 end_datetime <- ymd_hms(paste(end_date, "00:00:00"), tz = "UTC")
 
 # Function to determine start date based on existing file
 get_start_datetime <- function(filepath, default_start = ymd_hms("2022-01-01 00:00:00", tz = "UTC")) {
   if (file.exists(filepath)) {
     existing_data <- read_csv(filepath, show_col_types = FALSE)
-    last_datetime <- max(ymd_hms(existing_data$hour, tz = "UTC"))
+    
+    # Parse datetime format with Z suffix
+    last_datetime <- max(ymd_hms(existing_data$hour, tz = "UTC"), na.rm = TRUE)
+    
+    # Check if parsing was successful
+    if (is.na(last_datetime) || !is.finite(last_datetime)) {
+      warning("Could not parse dates from ", filepath, ". Using default start date.")
+      return(default_start)
+    }
+    
     return(last_datetime + hours(1))
   } else {
     return(default_start)
