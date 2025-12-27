@@ -26,8 +26,8 @@ jobs:
 
       - name: Install R packages
         run: |
-          install.packages(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite", "lubridate", "devtools"))
-          devtools::install_github("krose/entsoeapi", ref = "master")
+          install.packages(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite", "lubridate", "remotes"))
+          remotes::install_github("krose/entsoeapi", ref = "master")
         shell: Rscript {0}
 
       - name: Update data

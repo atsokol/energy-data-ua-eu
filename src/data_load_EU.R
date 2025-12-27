@@ -10,9 +10,6 @@ library(httr)
 
 source("src/helper_func_EU.R")
 
-# Create data_raw directory if it doesn't exist
-dir.create("data/data_raw", showWarnings = FALSE, recursive = TRUE)
-
 # Define end date
 end_date <- floor_date(today(), "month") - days(1)  # Last day of previous month
 
