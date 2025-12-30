@@ -42,6 +42,9 @@ jobs:
       - name: Update EU data
         run: Rscript -e 'source("src/data_load_EU.R")'
 
+      - name: Transform data
+        run: Rscript -e 'source("src/data_transform.R")'
+
       - name: Commit and push updated data
         run: |
           git config --local user.email "actions@github.com"
@@ -53,6 +56,8 @@ jobs:
           git add "data/data_raw/yield_RES_EU.csv" || true
           git add "data/data_raw/DAM_EU.csv" || true
           git add "data/data_raw/load_EU.csv" || true
+          git add "data/data_output/capacity_factors_daily.csv" || true
+          git add "data/data_output/capacity_factors_monthly.csv" || true
 
           if ! git diff --staged --quiet; then
             git commit -m "Updated UA and EU data"
