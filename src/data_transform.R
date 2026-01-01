@@ -44,16 +44,18 @@ data_ua <- left_join(
         hour,
         tech,
         gen_mw,
-        price_eur = price_eur_mwh
+        price_eur = price_eur_mwh,
+        volume
     )
 
-data_all <- rbind(data_eu, data_ua)
+data_all <- rbind(data_eu, select(data_ua, -volume))
 
 # ================================= 
 # Calculate capacity factors for each generation type
 #=================================
 
 factor_d <- data_all |>
+  filter(country != NA)
   mutate(date = floor_date(hour, unit = "days")) |>
   group_by(country, tech, date) |>
   summarise(
@@ -73,3 +75,18 @@ factor_m <- factor_d |>
 # Write results to files
 write_csv(factor_d, "data/data_output/capture_factors_daily.csv")
 write_csv(factor_m, "data/data_output/capture_factors_monthly.csv")
+
+# ================================= 
+# Calculate weighted average DAM prices
+#=================================
+
+price_wgt <- price_ua |>
+  mutate(date = floor_date(hour, unit = "days") |> as_date()) |>
+  group_by(country, date) |>
+  summarise(
+    price_uah = sum(price_uah * volume, na.rm = TRUE) / sum(volume, na.rm = TRUE),
+    price_eur = sum(price_eur_mwh * volume, na.rm = TRUE) / sum(volume, na.rm = TRUE),
+    .groups = "drop")
+
+# Write results to file
+write_csv(price_wgt, "data/data_output/DAM weighted price UA.csv")
