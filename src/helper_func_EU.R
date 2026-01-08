@@ -164,6 +164,90 @@ update_csv_file <- function(new_data, filepath, start_date, end_date) {
   }
 }
 
+# Download scheduled commercial exchange data
+download_transm_sched_eu <- function(zone_pairs, start_datetime, end_datetime, chunk_days = 365) {
+  date_chunks <- create_date_chunks(start_datetime, end_datetime, chunk_days = chunk_days)
+  
+  map_df(1:nrow(zone_pairs), function(i) {
+    from_country <- zone_pairs$from_country[i]
+    to_country <- zone_pairs$to_country[i]
+    from_eic <- zone_pairs$from_eic[i]
+    to_eic <- zone_pairs$to_eic[i]
+    
+    map_df(date_chunks, possibly(function(chunk) {
+      sched_raw <- transm_total_comm_sched(
+        eic_in = to_eic,
+        eic_out = from_eic,
+        period_start = chunk$start,
+        period_end = chunk$end,
+        tidy_output = TRUE
+      )
+      
+      if (nrow(sched_raw) == 0 || !"ts_point_dt_start" %in% names(sched_raw)) {
+        return(tibble::tibble())
+      }
+      
+      sched_raw |>
+        mutate(
+          from_country = from_country,
+          to_country = to_country,
+          hour = floor_date(ts_point_dt_start, unit = "hour")
+        ) |>
+        group_by(from_country, to_country, hour) |>
+        summarise(
+          scheduled_mw = mean(ts_point_quantity, na.rm = TRUE),
+          .groups = "drop"
+        )
+    }, otherwise = tibble::tibble()))
+  }) |>
+    filter(
+      hour >= start_datetime,
+      hour < end_datetime
+    )
+}
+
+# Download cross-border physical flow data
+download_transm_phys_eu <- function(zone_pairs, start_datetime, end_datetime, chunk_days = 365) {
+  date_chunks <- create_date_chunks(start_datetime, end_datetime, chunk_days = chunk_days)
+  
+  map_df(1:nrow(zone_pairs), function(i) {
+    from_country <- zone_pairs$from_country[i]
+    to_country <- zone_pairs$to_country[i]
+    from_eic <- zone_pairs$from_eic[i]
+    to_eic <- zone_pairs$to_eic[i]
+    
+    map_df(date_chunks, possibly(function(chunk) {
+      phys_raw <- transm_x_border_phys_flow(
+        eic_in = to_eic,
+        eic_out = from_eic,
+        period_start = chunk$start,
+        period_end = chunk$end,
+        tidy_output = TRUE
+      )
+      
+      if (nrow(phys_raw) == 0 || !"ts_point_dt_start" %in% names(phys_raw)) {
+        return(tibble::tibble())
+      }
+      
+      phys_raw |>
+        mutate(
+          from_country = from_country,
+          to_country = to_country,
+          hour = floor_date(ts_point_dt_start, unit = "hour")
+        ) |>
+        group_by(from_country, to_country, hour) |>
+        summarise(
+          physical_flow_mw = mean(ts_point_quantity, na.rm = TRUE),
+          .groups = "drop"
+        )
+    }, otherwise = tibble::tibble()))
+  }) |>
+    filter(
+      hour >= start_datetime,
+      hour < end_datetime
+    )
+}
+
 # Function to get ECB exchange rates and convert prices to EUR
 convert_to_eur <- function(df, date_col = "hour", currency_col = "currency", 
                           price_col = "price", start_date = "2022-01-01", 

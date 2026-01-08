@@ -16,13 +16,14 @@ library(tidyr)
 library(purrr)
 library(ggplot2)
 library(plotly)
+
 ```
 
 ```{r}
 
 # Combine EU generation and price data 
 gen_eu <- read_csv("../data/data_raw/yield_RES_EU.csv")
-price_eu <- read_csv("../data/data_raw/DAM_EU.csv")
+price_eu <- read_csv("data/data_raw/DAM_EU.csv")
 load_eu <- read_csv("../data/data_raw/load_EU.csv")
 
 
@@ -68,6 +69,8 @@ data_all <- rbind(data_eu, data_ua)
 # write_csv(data_all, "data/data_output/data_eu_ua.csv")
 
 ```
+
+## Capacity factors
 
 ```{r}
 # Calculate capacity factors for each generation type
@@ -139,6 +142,8 @@ ggplot(factor_seas, aes(x = month, y = cap_factor, color = year, group = year)) 
     theme_minimal()
 
 ```
+
+## Basic charts
 
 ```{r}
 
@@ -273,4 +278,144 @@ ggplot(data_d, aes(x = date)) +
   facet_grid(col = vars(type)) +
   theme_minimal()
 
+```
+
+## Balancing market
+
+```{r}
+price_bm_hourly <- price_bm_eu |> 
+  group_by(country, direction, reserve_type, currency, hour = floor_date(datetime, unit = "hours")) |> 
+  summarise(
+    price = mean(price[price != 0], na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  convert_to_eur(date_col = "hour") |> 
+  filter(!is.na(price) & !is.nan(price)) |> 
+  rename(price_bm_eur = price_eur) |> 
+  left_join(
+    price_eu |> mutate(country = case_when(
+      country == "SK" ~ "Slovak Republic",
+      country == "HU" ~ "Hungary",
+      country == "PL" ~ "Poland",
+      country == "RO" ~ "Romania"
+    )),
+    by = c("country", "hour")) |> 
+  rename(price_dam_eur = price_eur) |> 
+  arrange(country, hour, direction) |> 
+  mutate(
+    spread = ifelse(direction == "UP", price_bm_eur - price_dam_eur, price_dam_eur - price_bm_eur)
+  ) 
+
+  price_bm_daily <- price_bm_hourly |>
+    group_by(country, direction, reserve_type, date = as_date(hour)) |>
+    summarise(
+      spread = mean(spread, na.rm = TRUE),
+      .groups = "drop"
+    ) |> 
+    mutate(direction = factor(direction),
+          reserve_type = factor(reserve_type)
+          ) |> 
+    arrange(country, date, direction)
+
+ggplot(price_bm_daily |> filter(reserve_type == "Manual frequency restoration reserve"), 
+  aes(x = date, y = spread, color = reserve_type)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(se=FALSE) +
+  facet_grid(rows = vars(country), cols = vars(direction)) +
+  scale_y_continuous(limits = c(0, 1000)) +
+  theme_minimal()
+
+```
+
+## Cross-border flows
+
+```{r}
+sched_capacity <- read_csv("/Users/andrii/Documents/R files/_My projects/RES data download/data/data_raw/transm_sched_EU.csv")
+flows <- read_csv("/Users/andrii/Documents/R files/_My projects/RES data download/data/data_raw/transm_phys_EU.csv")
+
+# Flows
+flows |> 
+  mutate(direction = ifelse(from_country == "UA", "export", "import"),
+    country = ifelse(direction == "export", to_country, from_country)) |> 
+  group_by(direction, country, date = floor_date(hour, unit = "months")) |>
+  summarise(
+    flow = sum(physical_flow_mw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+    ggplot(aes(x = date, y = ifelse(direction == "export", flow, -flow), fill = country)) +
+    geom_col(stat = "identity", alpha = 0.7, color = NA) +
+    geom_hline(yintercept = 0, color = "grey40") +
+    facet_grid(cols = vars(country)) +
+    theme_minimal()
+
+total_flows <- flows |> 
+  mutate(direction = ifelse(from_country == "UA", "export", "import"),
+    country = ifelse(direction == "export", to_country, from_country)) |> 
+  group_by(direction, date = floor_date(hour, unit = "days")) |>
+  summarise(
+    flow = sum(physical_flow_mw, na.rm = TRUE),
+    .groups = "drop"
+  ) 
+
+total_flows_net <- total_flows |> 
+  pivot_wider(
+    names_from = direction,
+    values_from = flow
+  ) |> 
+  mutate(net = export - import)
+
+ggplot() +
+  geom_col(data = total_flows, 
+    aes(x = date, y = ifelse(direction == "export", flow, -flow), fill = direction),
+    stat = "identity", 
+    position = "dodge", 
+    alpha = 0.7, 
+    color = NA) +
+  geom_line(data = total_flows_net, aes(x = date, y = net), color = "black", size = 0.5) +
+  geom_hline(yintercept = 0, color = "grey40") +
+  theme_minimal()
+
+# Scheduled capacity
+sched_capacity |> 
+  mutate(direction = ifelse(from_country == "UA", "export", "import"),
+    country = ifelse(direction == "export", to_country, from_country)) |> 
+  group_by(direction, country, date = floor_date(hour, unit = "months")) |>
+  summarise(
+    flow = sum(scheduled_mw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+    ggplot(aes(x = date, y = ifelse(direction == "export", flow, -flow), fill = country)) +
+    geom_col(stat = "identity", alpha = 0.7, color = NA) +
+    geom_hline(yintercept = 0, color = "grey40") +
+    facet_grid(cols = vars(country)) +
+    labs(title = "Scheduled Capacity") +
+    theme_minimal()
+
+total_sched <- sched_capacity |> 
+  mutate(direction = ifelse(from_country == "UA", "export", "import"),
+    country = ifelse(direction == "export", to_country, from_country)) |> 
+  group_by(direction, date = floor_date(hour, unit = "days")) |>
+  summarise(
+    flow = sum(scheduled_mw, na.rm = TRUE),
+    .groups = "drop"
+  ) 
+
+total_sched_net <- total_sched |> 
+  pivot_wider(
+    names_from = direction,
+    values_from = flow
+  ) |> 
+  mutate(net = export - import)
+
+ggplot() +
+  geom_col(data = total_sched, 
+    aes(x = date, y = ifelse(direction == "export", flow, -flow), fill = direction),
+    stat = "identity", 
+    position = "dodge", 
+    alpha = 0.7, 
+    color = NA) +
+  geom_line(data = total_sched_net, aes(x = date, y = net), color = "black", size = 0.5) +
+  geom_hline(yintercept = 0, color = "grey40") +
+  labs(title = "Scheduled Capacity") +
+  theme_minimal()
 ```

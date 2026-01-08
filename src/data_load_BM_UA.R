@@ -81,17 +81,14 @@ if (length(all_urls) == 0) {
           relationship = "many-to-one"
         ) |> 
         mutate(
-          datetime = hour,
           date = as_date(hour),
-          hour_of_day = hour(hour),
+          hour = hour(hour),
           .before = direction
         ) |>
         mutate(
           price_bm_eur = price_bm_uah / rate,
           .before = price_bm_uah
-        ) |>
-        select(-hour) |>
-        rename(hour = datetime)
+        )
 
       # Save
       write_csv(bm_ua, "data/data_raw/BM_UA.csv")
