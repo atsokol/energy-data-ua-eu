@@ -28,16 +28,19 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev chromium-browser chromium-chromedriver
 
       - name: Install R packages
         run: |
-          install.packages(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite", "lubridate", "glue", "remotes"))
+          install.packages(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite", "lubridate", "glue", "remotes", "chromote", "rvest", "readxl", "stringr"))
           remotes::install_github("krose/entsoeapi")
         shell: Rscript {0}
 
       - name: Update UA data
         run: Rscript -e 'source("src/data_load_UA.R")'
+
+      - name: Update BM UA data
+        run: Rscript -e 'source("src/data_load_BM_UA.R")'
 
       - name: Update EU data
         run: Rscript -e 'source("src/data_load_EU.R")'
@@ -53,6 +56,7 @@ jobs:
           git add "data/data_raw/yield_solar_UA.csv" || true
           git add "data/data_raw/yield_wind_UA.csv" || true
           git add "data/data_raw/DAM_UA.csv" || true
+          git add "data/data_raw/BM_UA.csv" || true
           git add "data/data_raw/yield_RES_EU.csv" || true
           git add "data/data_raw/DAM_EU.csv" || true
           git add "data/data_raw/load_EU.csv" || true
