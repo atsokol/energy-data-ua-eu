@@ -14,7 +14,7 @@ source("src/helper_func_BM_UA.R")
 get_last_bm_date <- function(filepath) {
   if (file.exists(filepath)) {
     existing_data <- read_csv(filepath, show_col_types = FALSE)
-    last_date <- max(as.Date(existing_data$hour), na.rm = TRUE)
+    last_date <- max(as.Date(existing_data$date), na.rm = TRUE)
     
     # Return the first day of the month after the last date
     return(floor_date(last_date, "month") + months(1))
@@ -50,21 +50,12 @@ if (length(all_urls) == 0) {
     new_bm_data <- map_dfr(new_urls, download_bm_file)
     
     if (nrow(new_bm_data) > 0) {
-      # Read existing data if it exists
-      if (file.exists("data/data_raw/BM_UA.csv")) {
-        existing_bm <- read_csv("data/data_raw/BM_UA.csv", show_col_types = FALSE)
-        
-        # Combine and remove duplicates
-        bm_ua <- bind_rows(existing_bm, new_bm_data) |>
-          distinct(country, hour, .keep_all = TRUE) |>
-          arrange(hour)
-      } else {
-        bm_ua <- new_bm_data |>
-          arrange(hour)
-      }
-      
-      # Join the DAM data and convert prices to EUR
-      bm_ua <- bm_ua |>
+      # Process new data: pivot and join with DAM data
+      new_bm_processed <- new_bm_data |>
+        mutate(
+          date = as_date(hour),
+          hour_num = hour(hour)
+        ) |>
         pivot_longer(
           cols = c(volume_up, price_up, volume_down, price_down),
           names_to = c(".value", "direction"),
@@ -76,19 +67,35 @@ if (length(all_urls) == 0) {
         ) |> 
         left_join(
           read_csv("data/data_raw/DAM_UA.csv", show_col_types = FALSE) |>
-        select(country, hour, price_dam_eur = price_eur_mwh, price_dam_uah = price_uah, volume_dam = volume, rate),
-          by = join_by(country, hour),
+            mutate(
+              date = as_date(as.POSIXct(hour, tz = "UTC")),
+              hour_num = hour(as.POSIXct(hour, tz = "UTC"))
+            ) |>
+            select(country, date, hour_num, price_dam_eur = price_eur_mwh, price_dam_uah = price_uah, volume_dam = volume, rate),
+          by = join_by(country, date, hour_num),
           relationship = "many-to-one"
         ) |> 
         mutate(
-          date = as_date(hour),
-          hour = hour(hour),
-          .before = direction
-        ) |>
-        mutate(
           price_bm_eur = price_bm_uah / rate,
           .before = price_bm_uah
-        )
+        ) |>
+        filter(!(volume_bm == 0 & price_bm_eur == 0)) |>
+        select(-hour) |>
+        rename(hour = hour_num) |>
+        relocate(country, date, hour, direction)
+      
+      # Read existing data if it exists and combine
+      if (file.exists("data/data_raw/BM_UA.csv")) {
+        existing_bm <- read_csv("data/data_raw/BM_UA.csv", show_col_types = FALSE)
+        
+        # Combine and remove duplicates
+        bm_ua <- bind_rows(existing_bm, new_bm_processed) |>
+          distinct(country, date, hour, direction, .keep_all = TRUE) |>
+          arrange(date, hour, direction)
+      } else {
+        bm_ua <- new_bm_processed |>
+          arrange(date, hour, direction)
+      }
 
       # Save
       write_csv(bm_ua, "data/data_raw/BM_UA.csv")
