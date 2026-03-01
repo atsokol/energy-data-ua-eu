@@ -24,16 +24,28 @@ jobs:
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true          # pre-compiled Linux binaries → ~10× faster
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev chromium-browser chromium-chromedriver
 
+      - name: Cache R packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: r-packages-${{ runner.os }}-${{ hashFiles('.github/workflows/data_update.yaml') }}
+          restore-keys: |
+            r-packages-${{ runner.os }}-
+
       - name: Install R packages
         run: |
-          install.packages(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite", "lubridate", "glue", "remotes", "chromote", "rvest", "readxl", "stringr"))
-          remotes::install_github("krose/entsoeapi")
+          if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+          pak::pak(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite",
+                     "lubridate", "glue", "chromote", "rvest", "readxl", "stringr",
+                     "krose/entsoeapi"))
         shell: Rscript {0}
 
       - name: Update UA data
