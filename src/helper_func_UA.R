@@ -61,7 +61,7 @@ download_dam_ua <- function(start_date, end_date) {
   ) |> 
     transmute(
       country = "UA",
-      hour = ymd_h(paste(format(date, "%Y-%m-%d"), hour - 1), tz = "UTC"),
+      hour = ymd_h(paste(format(date, "%Y-%m-%d"), as.integer(hour) - 1), tz = "UTC"),
       date = date,
       price_uah = price,
       volume = volume
