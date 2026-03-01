@@ -31,28 +31,34 @@ wind_start <- get_start_date("data/data_raw/yield_wind_UA.csv")
 
 # Download and update DAM data
 if (dam_start <= end_date) {
-  fx_data <- get_nbu_fx(dam_start - days(7), end_date, valcode = "EUR") |>
-    complete(date = seq(dam_start - days(7), end_date, by = "day")) |>
-    fill(rate, .direction = "down") |>
-    filter(date >= dam_start)
+  new_dam_raw <- download_dam_ua(dam_start, end_date)
   
-  new_dam <- download_dam_ua(dam_start, end_date) |>
-    mutate(date = as.Date(hour)) |>
-    left_join(fx_data, by = "date") |> 
-    mutate(price_eur_mwh = price_uah / rate) 
-  
-  if (file.exists("data/data_raw/DAM_UA.csv")) {
-    existing_dam <- read_csv("data/data_raw/DAM_UA.csv", show_col_types = FALSE)
-    price_ua <- bind_rows(
-      existing_dam |> filter(as.Date(hour) < dam_start),
-      new_dam
-    )
+  if (nrow(new_dam_raw) > 0) {
+    fx_data <- get_nbu_fx(dam_start - days(7), end_date, valcode = "EUR") |>
+      complete(date = seq(dam_start - days(7), end_date, by = "day")) |>
+      fill(rate, .direction = "down") |>
+      filter(date >= dam_start)
+    
+    new_dam <- new_dam_raw |>
+      mutate(date = as.Date(hour)) |>
+      left_join(fx_data, by = "date") |> 
+      mutate(price_eur_mwh = price_uah / rate) 
+    
+    if (file.exists("data/data_raw/DAM_UA.csv")) {
+      existing_dam <- read_csv("data/data_raw/DAM_UA.csv", show_col_types = FALSE)
+      price_ua <- bind_rows(
+        existing_dam |> filter(as.Date(hour) < dam_start),
+        new_dam
+      )
+    } else {
+      price_ua <- new_dam
+    }
+    
+    write_csv(price_ua, "data/data_raw/DAM_UA.csv")
+    message("DAM data updated from ", dam_start, " to ", end_date)
   } else {
-    price_ua <- new_dam
+    message("DAM download returned no data (API may be unavailable)")
   }
-  
-  write_csv(price_ua, "data/data_raw/DAM_UA.csv")
-  message("DAM data updated from ", dam_start, " to ", end_date)
 } else {
   message("DAM data is up to date")
 }

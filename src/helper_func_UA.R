@@ -58,7 +58,16 @@ download_dam_ua <- function(start_date, end_date) {
   map_dfr(
     dates,
     ~fetch_oree_day(.x, market = "DAM", zone = 2)
-  ) |> 
+  )
+  
+  if (nrow(raw) == 0) {
+    warning("No DAM data returned for ", start_date, " to ", end_date)
+    return(tibble(country = character(), hour = as.POSIXct(character()), 
+                  date = as.Date(character()), price_uah = numeric(), 
+                  volume = numeric()))
+  }
+  
+  raw |> 
     rename(hour_raw = hour) |>
     transmute(
       country = "UA",
