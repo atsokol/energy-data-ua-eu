@@ -59,9 +59,10 @@ download_dam_ua <- function(start_date, end_date) {
     dates,
     ~fetch_oree_day(.x, market = "DAM", zone = 2)
   ) |> 
+    rename(hour_raw = hour) |>
     transmute(
       country = "UA",
-      hour = ymd_h(paste(format(date, "%Y-%m-%d"), as.integer(.data$hour) - 1), tz = "UTC"),
+      hour = ymd_h(paste(format(date, "%Y-%m-%d"), as.integer(hour_raw) - 1), tz = "UTC"),
       date = date,
       price_uah = price,
       volume = volume
