@@ -21,7 +21,7 @@ gen_ua <- rbind(
   wind_ua |> mutate(type = "Wind onshore")
 ) |> 
     transmute(
-        hour = ymd_h(paste(format(date, "%Y-%m-%d"), hour - 1), tz = "UTC"),
+        hour = ymd_h(paste(format(date, "%Y-%m-%d"), .data$hour - 1), tz = "UTC"),
         type = type,
         gen_mw = if_else(actual < 0, 0, actual)
         )

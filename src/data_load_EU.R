@@ -45,9 +45,11 @@ end_date <- floor_date(today(), "month") - days(1)  # Last day of previous month
 # Determine start dates for each dataset (as Date objects)
 gen_start <- get_start_date("data/data_raw/yield_RES_EU.csv")
 price_start <- get_start_date("data/data_raw/DAM_EU.csv")
+price_15m_start <- get_start_date("data/data_raw/DAM_EU_15m.csv")
 load_start <- get_start_date("data/data_raw/load_EU.csv")
 bm_start <- get_start_date("data/data_raw/BM_EU.csv", date_col = "datetime")
 bm_vol_start <- get_start_date("data/data_raw/BM_EU_vol.csv", date_col = "datetime", default_start = "2024-01-01")
+contracted_reserves_start <- get_start_date("data/data_raw/contracted_reserves_EU.csv", date_col = "datetime", default_start = "2022-01-01")
 transm_sched_start <- get_start_date("data/data_raw/transm_sched_EU.csv")
 transm_phys_start <- get_start_date("data/data_raw/transm_phys_EU.csv")
 
@@ -63,16 +65,28 @@ if (gen_start <= end_date) {
   message("RES generation data is up to date")
 }
 
-# Download and update DAM price data
+# Download and update DAM price data with time aggregation to hourly
 if (price_start <= end_date) {
   # Convert Date to datetime for API calls
   price_start_dt <- ymd_hms(paste(price_start, "00:00:00"), tz = "UTC")
   end_date_dt <- ymd_hms(paste(end_date + days(1), "00:00:00"), tz = "UTC")
   
-  new_price <- download_price_eu(zones, price_start_dt, end_date_dt)
+  new_price <- download_price_eu(zones, price_start_dt, end_date_dt, time_aggregate = TRUE)
   update_csv_file(new_price, "data/data_raw/DAM_EU.csv", price_start, end_date)
 } else {
   message("DAM price data is up to date")
+}
+
+# Download and update DAM price data without time aggregation 
+if (price_15m_start <= end_date) {
+  # Convert Date to datetime for API calls
+  price_15m_start_dt <- ymd_hms(paste(price_15m_start, "00:00:00"), tz = "UTC")
+  end_date_dt <- ymd_hms(paste(end_date + days(1), "00:00:00"), tz = "UTC")
+  
+  new_price <- download_price_eu(zones, price_15m_start_dt, end_date_dt, time_aggregate = FALSE)
+  update_csv_file(new_price, "data/data_raw/DAM_EU_15m.csv", price_15m_start, end_date)
+} else {
+  message("DAM 15-min price data is up to date")
 }
 
 # Download and update load data
@@ -94,7 +108,7 @@ if (bm_start <= end_date) {
   end_date_dt <- ymd_hms(paste(end_date + days(1), "00:00:00"), tz = "UTC")
   
   new_bm <- download_balancing_prices_eu(zones, bm_start_dt, end_date_dt, chunk_days = 90)
-  update_csv_file(new_bm, "data/data_raw/BM_EU.csv", bm_start, end_date)
+  update_csv_file(new_bm, "data/data_raw/BM_EU.csv", bm_start, end_date, datetime_col = "datetime")
 } else {
   message("Balancing market price data is up to date")
 }
@@ -106,9 +120,23 @@ if (bm_vol_start <= end_date) {
   end_date_dt <- ymd_hms(paste(end_date + days(1), "00:00:00"), tz = "UTC")
   
   new_bm_vol <- download_balancing_volumes_eu(zones, bm_vol_start_dt, end_date_dt, chunk_days = 90)
-  update_csv_file(new_bm_vol, "data/data_raw/BM_EU_vol.csv", bm_vol_start, end_date)
+  update_csv_file(new_bm_vol, "data/data_raw/BM_EU_vol.csv", bm_vol_start, end_date, datetime_col = "datetime")
 } else {
   message("Balancing market volume data is up to date")
+}
+
+# Download and update contracted reserves data
+if (contracted_reserves_start <= end_date) {
+  # Convert Date to datetime for API calls
+  contracted_reserves_start_dt <- ymd_hms(paste(contracted_reserves_start, "00:00:00"), tz = "UTC")
+  end_date_dt <- ymd_hms(paste(end_date + days(1), "00:00:00"), tz = "UTC")
+  
+  # Note: chunk_days is handled internally by download_contracted_reserves_eu
+  # Different contract types use different chunk sizes automatically
+  new_contracted_reserves <- download_contracted_reserves_eu(zones[1], contracted_reserves_start_dt, end_date_dt, process_type = "A51")
+  update_csv_file(new_contracted_reserves, "data/data_raw/contracted_reserves_EU.csv", contracted_reserves_start, end_date, datetime_col = "datetime")
+} else {
+  message("Contracted reserves data is up to date")
 }
 
 # Download and update scheduled commercial exchange data

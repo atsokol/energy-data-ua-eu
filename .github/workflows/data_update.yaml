@@ -60,6 +60,13 @@ jobs:
           git add "data/data_raw/yield_RES_EU.csv" || true
           git add "data/data_raw/DAM_EU.csv" || true
           git add "data/data_raw/load_EU.csv" || true
+          git add "data/data_raw/BM_EU.csv" || true
+          git add "data/data_raw/BM_EU_vol.csv" || true
+          git add "data/data_raw/contracted_reserves_EU.csv" || true
+          git add "data/data_raw/transm_sched_EU.csv" || true
+          git add "data/data_raw/transm_phys_EU.csv" || true
+          git add "data/data_raw/DAM_EU_15m.csv" || true
+          git add "data/data_output/DAM weighted price UA.csv" || true
           git add "data/data_output/capture_factors_daily.csv" || true
           git add "data/data_output/capture_factors_monthly.csv" || true
 

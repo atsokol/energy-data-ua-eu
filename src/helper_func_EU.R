@@ -68,10 +68,10 @@ download_gen_eu <- function(zones, gen_types, start_datetime, end_datetime, chun
 }
 
 # Download DAM price data 
-download_price_eu <- function(zones, start_datetime, end_datetime, chunk_days = 365) {
+download_price_eu <- function(zones, start_datetime, end_datetime, chunk_days = 365, time_aggregate = TRUE) {
   date_chunks <- create_date_chunks(start_datetime, end_datetime, chunk_days = chunk_days)
   
-  map_df(names(zones), function(country) {
+  result <- map_df(names(zones), function(country) {
     map_df(date_chunks, function(chunk) {
       px_raw <- transm_day_ahead_prices(
         eic = zones[country],
@@ -80,22 +80,35 @@ download_price_eu <- function(zones, start_datetime, end_datetime, chunk_days = 
         tidy_output  = TRUE
       )
       
-      px_raw |>
-        mutate(
-          country = country,
-          hour = floor_date(ts_point_dt_start, unit = "hour")
-        ) |>
-        group_by(country, hour) |>
-        summarise(
-          price_eur = mean(ts_point_price_amount, na.rm = TRUE),
-          .groups = "drop"
-        )
+      if (time_aggregate) {
+        # Aggregate to hourly
+        px_raw |>
+          mutate(
+            country = country,
+            hour = floor_date(ts_point_dt_start, unit = "hour")
+          ) |>
+          group_by(country, hour) |>
+          summarise(
+            price_eur = mean(ts_point_price_amount, na.rm = TRUE),
+            .groups = "drop"
+          )
+      } else {
+        # Keep original resolution
+        px_raw |>
+          mutate(
+            country = country,
+            hour = ts_point_dt_start
+          ) |>
+          select(country, hour, price_eur = ts_point_price_amount)
+      }
     })
   }) |>
     filter(
       hour >= start_datetime,
       hour < end_datetime
     )
+  
+  return(result)
 }
 
 # Download total load data
@@ -148,10 +161,13 @@ create_date_chunks <- function(start_datetime, end_datetime, chunk_days = 365) {
 }
 
 # Update CSV file with new data
-update_csv_file <- function(new_data, filepath, start_date, end_date) {
+update_csv_file <- function(new_data, filepath, start_date, end_date, datetime_col = "hour") {
   if (nrow(new_data) > 0) {
     if (file.exists(filepath)) {
       existing_data <- read_csv(filepath, show_col_types = FALSE)
+      # Remove existing rows from start_date onward to avoid duplicates
+      existing_data <- existing_data |>
+        filter(as.Date(.data[[datetime_col]]) < start_date)
       combined_data <- bind_rows(existing_data, new_data)
     } else {
       combined_data <- new_data
@@ -321,8 +337,59 @@ convert_to_eur <- function(df, date_col = "hour", currency_col = "currency",
       price_eur = if_else(
         .data[[currency_col]] == "EUR",
         .data[[price_col]],
-        .data[[price_col]] * rate
+        .data[[price_col]] / rate  # Divide because ECB rate is "1 EUR = X currency"
       )
     ) |>
     select(-date, -rate)
+}
+
+# Function to standardize DAM prices to 15-minute resolution
+# Expands hourly observations to four 15-minute slots with the same price
+standardize_dam_to_15min <- function(df, time_col = "hour", value_cols = "price_eur") {
+  
+  # Parse datetime and group by all columns except time
+  group_cols <- setdiff(names(df), time_col)
+  
+  df_parsed <- df |>
+    mutate(hour_parsed = ymd_hms(.data[[time_col]], tz = "UTC", quiet = TRUE)) |>
+    group_by(across(all_of(group_cols))) |>
+    arrange(hour_parsed, .by_group = TRUE) |>
+    mutate(
+      time_diff = as.numeric(difftime(hour_parsed, lag(hour_parsed), units = "mins"))
+    ) |>
+    ungroup()
+  
+  # Identify hourly observations (first obs per group or 60+ minute gaps)
+  hourly_obs <- df_parsed |>
+    filter(is.na(time_diff) | time_diff >= 60)
+  
+  # Identify sub-hourly observations (15-minute or 30-minute intervals)
+  subhourly_obs <- df_parsed |>
+    filter(!is.na(time_diff) & time_diff < 60)
+  
+  # Expand hourly observations to 15-minute resolution
+  if (nrow(hourly_obs) > 0) {
+    hourly_expanded <- hourly_obs |>
+      select(-time_diff, -!!sym(time_col)) |>
+      mutate(
+        # Create 4 time slots: original hour + 0, 15, 30, 45 minutes
+        hour_list = map(hour_parsed, ~ .x + minutes(c(0, 15, 30, 45)))
+      ) |>
+      unnest(hour_list) |>
+      select(-hour_parsed) |>
+      rename(!!sym(time_col) := hour_list)
+  } else {
+    hourly_expanded <- tibble()
+  }
+  
+  # Combine expanded hourly data with original sub-hourly data
+  result <- bind_rows(
+    hourly_expanded,
+    subhourly_obs |> select(-time_diff, -hour_parsed)
+  ) |>
+    # Remove any duplicate timestamps (can occur during DST transitions)
+    distinct() |>
+    arrange(across(all_of(c(setdiff(names(df), c(time_col, value_cols)), time_col))))
+  
+  return(result)
 }

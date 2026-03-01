@@ -31,7 +31,10 @@ wind_start <- get_start_date("data/data_raw/yield_wind_UA.csv")
 
 # Download and update DAM data
 if (dam_start <= end_date) {
-  fx_data <- get_nbu_fx(dam_start, end_date, valcode = "EUR")
+  fx_data <- get_nbu_fx(dam_start - days(7), end_date, valcode = "EUR") |>
+    complete(date = seq(dam_start - days(7), end_date, by = "day")) |>
+    fill(rate, .direction = "down") |>
+    filter(date >= dam_start)
   
   new_dam <- download_dam_ua(dam_start, end_date) |>
     mutate(date = as.Date(hour)) |>
@@ -40,7 +43,10 @@ if (dam_start <= end_date) {
   
   if (file.exists("data/data_raw/DAM_UA.csv")) {
     existing_dam <- read_csv("data/data_raw/DAM_UA.csv", show_col_types = FALSE)
-    price_ua <- bind_rows(existing_dam, new_dam)
+    price_ua <- bind_rows(
+      existing_dam |> filter(as.Date(hour) < dam_start),
+      new_dam
+    )
   } else {
     price_ua <- new_dam
   }
@@ -60,7 +66,10 @@ if (solar_start <= end_date) {
   
   if (file.exists("data/data_raw/yield_solar_UA.csv")) {
     existing_solar <- read_csv("data/data_raw/yield_solar_UA.csv", show_col_types = FALSE)
-    solar_ua <- bind_rows(existing_solar, new_solar)
+    solar_ua <- bind_rows(
+      existing_solar |> filter(as.Date(date) < solar_start),
+      new_solar
+    )
   } else {
     solar_ua <- new_solar
   }
@@ -80,7 +89,10 @@ if (wind_start <= end_date) {
   
   if (file.exists("data/data_raw/yield_wind_UA.csv")) {
     existing_wind <- read_csv("data/data_raw/yield_wind_UA.csv", show_col_types = FALSE)
-    wind_ua <- bind_rows(existing_wind, new_wind)
+    wind_ua <- bind_rows(
+      existing_wind |> filter(as.Date(date) < wind_start),
+      new_wind
+    )
   } else {
     wind_ua <- new_wind
   }

@@ -16,8 +16,8 @@ get_last_bm_date <- function(filepath) {
     existing_data <- read_csv(filepath, show_col_types = FALSE)
     last_date <- max(as.Date(existing_data$date), na.rm = TRUE)
     
-    # Return the first day of the month after the last date
-    return(floor_date(last_date, "month") + months(1))
+    # Return the first day of the last month to re-download partial months
+    return(floor_date(last_date, "month"))
   } else {
     return(as.Date("2022-01-01"))
   }
