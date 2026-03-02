@@ -1,8 +1,11 @@
-name: Update UA and EU data
+name: Update data (CI — no VPN)
+# Downloads data from public APIs that do NOT require a Ukrainian IP.
+# BM_UA (ua.energy) is geo-blocked and must be updated locally
+# via: Rscript src/run_local_vpn.R
 
 on:
   schedule:
-    # Runs at 20:00 UTC on the 1st day of each month
+    # 20:00 UTC on the 1st of each month
     - cron: "0 20 1 * *"
   workflow_dispatch:
 
@@ -25,65 +28,65 @@ jobs:
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
-          use-public-rspm: true          # pre-compiled Linux binaries → ~10× faster
+          use-public-rspm: true
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev chromium-browser chromium-chromedriver
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
       - name: Cache R packages
         uses: actions/cache@v4
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: r-packages-${{ runner.os }}-${{ hashFiles('.github/workflows/data_update.yaml') }}
+          key: r-packages-${{ runner.os }}-${{ hashFiles('renv.lock') }}
           restore-keys: |
             r-packages-${{ runner.os }}-
 
       - name: Install R packages
         run: |
-          if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-          pak::pak(c("dplyr", "tidyr", "purrr", "readr", "httr", "jsonlite",
-                     "lubridate", "glue", "chromote", "rvest", "readxl", "stringr",
-                     "krose/entsoeapi"))
+          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+          renv::restore()
         shell: Rscript {0}
 
-      - name: Update UA data
-        run: Rscript -e 'source("src/data_load_UA.R")'
+      # ── UA tasks (public APIs — no VPN) ─────────────────────────────────
 
-      - name: Update BM UA data
-        run: Rscript -e 'source("src/data_load_BM_UA.R")'
+      - name: DAM UA (oree.com.ua)
+        run: Rscript src/tasks/task_dam_ua.R
+        continue-on-error: true
 
-      - name: Update EU data
-        run: Rscript -e 'source("src/data_load_EU.R")'
+      - name: Solar UA (gpee.com.ua)
+        run: Rscript src/tasks/task_solar_ua.R
+        continue-on-error: true
+
+      - name: Wind UA (gpee.com.ua)
+        run: Rscript src/tasks/task_wind_ua.R
+        continue-on-error: true
+
+      # ── EU tasks (ENTSO-E Transparency) ─────────────────────────────────
+
+      - name: EU data (ENTSO-E)
+        run: Rscript src/tasks/task_eu.R
+        continue-on-error: true
+
+      # ── Transform ──────────────────────────────────────────────────────
 
       - name: Transform data
-        run: Rscript -e 'source("src/data_transform.R")'
+        run: Rscript src/tasks/task_transform.R
+        continue-on-error: true
+
+      # ── Commit ─────────────────────────────────────────────────────────
 
       - name: Commit and push updated data
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-           
-          git add "data/data_raw/yield_solar_UA.csv" || true
-          git add "data/data_raw/yield_wind_UA.csv" || true
-          git add "data/data_raw/DAM_UA.csv" || true
-          git add "data/data_raw/BM_UA.csv" || true
-          git add "data/data_raw/yield_RES_EU.csv" || true
-          git add "data/data_raw/DAM_EU.csv" || true
-          git add "data/data_raw/load_EU.csv" || true
-          git add "data/data_raw/BM_EU.csv" || true
-          git add "data/data_raw/BM_EU_vol.csv" || true
-          git add "data/data_raw/contracted_reserves_EU.csv" || true
-          git add "data/data_raw/transm_sched_EU.csv" || true
-          git add "data/data_raw/transm_phys_EU.csv" || true
-          git add "data/data_raw/DAM_EU_15m.csv" || true
-          git add "data/data_output/DAM weighted price UA.csv" || true
-          git add "data/data_output/capture_factors_daily.csv" || true
-          git add "data/data_output/capture_factors_monthly.csv" || true
+
+          git add data/data_raw/*.csv || true
+          git add data/data_output/*.csv || true
 
           if ! git diff --staged --quiet; then
-            git commit -m "Updated UA and EU data"
+            git commit -m "Auto-update data $(date +%Y-%m-%d)"
             git push
           else
             echo "No changes to commit"
