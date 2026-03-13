@@ -3,9 +3,9 @@
 # run_local_vpn.sh — Download BM UA data via Ukrainian VPN
 #
 # Usage:
-#   ./run_local_vpn.sh              # uses Apple Shortcuts for VPN
+#   ./run_local_vpn.sh              # uses Apple Shortcuts for VPN, then pushes
 #   ./run_local_vpn.sh --no-vpn     # skip VPN toggle (already connected)
-#   ./run_local_vpn.sh --commit     # also git commit + push after download
+#   ./run_local_vpn.sh --no-commit  # skip git commit + push after download
 #
 # VPN options (pick ONE during setup — see README):
 #   1. Apple Shortcuts  — create "ClearVPN Connect UA" and "ClearVPN Disconnect"
@@ -20,13 +20,13 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ── Parse flags ──────────────────────────────────────────────────────────────
 SKIP_VPN=false
-DO_COMMIT=false
+DO_COMMIT=true
 
 for arg in "$@"; do
   case "$arg" in
-    --no-vpn)  SKIP_VPN=true ;;
-    --commit)  DO_COMMIT=true ;;
-    *)         echo "Unknown flag: $arg"; exit 1 ;;
+    --no-vpn)     SKIP_VPN=true ;;
+    --no-commit)  DO_COMMIT=false ;;
+    *)            echo "Unknown flag: $arg"; exit 1 ;;
   esac
 done
 
@@ -98,7 +98,7 @@ fi
 if [ "$DO_COMMIT" = true ] && [ "$RSCRIPT_EXIT" -eq 0 ]; then
   echo ""
   echo "📤 Committing updated data..."
-  git add data/data_raw/BM_UA.csv data/data_output/*.csv 2>/dev/null || true
+  git add data/data_raw/BM_UA.csv data/data_output/*.csv data/data_output/*.parquet 2>/dev/null || true
   if ! git diff --staged --quiet 2>/dev/null; then
     git commit -m "Update BM UA data $(date +%Y-%m-%d)"
     git push

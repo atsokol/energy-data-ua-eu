@@ -86,6 +86,38 @@
       "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
       "Repository": "CRAN"
     },
+    "TTR": {
+      "Package": "TTR",
+      "Version": "0.24.4",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Technical Trading Rules",
+      "Imports": "xts (>= 0.10-0), zoo, curl",
+      "LinkingTo": "xts",
+      "Enhances": "quantmod",
+      "Description": "A collection of over 50 technical indicators for creating technical trading rules.",
+      "License": "GPL (>= 2)",
+      "URL": "https://github.com/joshuaulrich/TTR",
+      "NeedsCompilation": "yes",
+      "Author": "Joshua Ulrich [cre, aut], Ethan B. Smith [ctb]",
+      "Maintainer": "Joshua Ulrich <josh.m.ulrich@gmail.com>",
+      "Repository": "CRAN"
+    },
+    "arrow": {
+      "Package": "arrow",
+      "Version": "23.0.1.1",
+      "Source": "Repository",
+      "Title": "Integration to 'Apache' 'Arrow'",
+      "Description": "'Apache' 'Arrow' is a cross-language development platform for in-memory data.",
+      "Depends": "R (>= 4.1)",
+      "Imports": "assertthat, bit64 (>= 0.9-7), glue, methods, purrr, R6, rlang (>= 1.0.0), stats, tidyselect (>= 1.0.0), utils, vctrs",
+      "LinkingTo": "cpp11 (>= 0.4.2)",
+      "License": "Apache License (>= 2.0)",
+      "NeedsCompilation": "yes",
+      "Author": "Neal Richardson [aut], Ian Cook [aut], Nic Crane [aut], Jonathan Keane [aut, cre], Apache Arrow [aut, cph]",
+      "Maintainer": "Jonathan Keane <jkeane@gmail.com>",
+      "Repository": "CRAN"
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.2.1",
@@ -109,6 +141,19 @@
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (<https://orcid.org/0000-0002-4035-0289>)",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
+      "Repository": "CRAN"
+    },
+    "assertthat": {
+      "Package": "assertthat",
+      "Version": "0.2.1",
+      "Source": "Repository",
+      "Title": "Easy Pre and Post Assertions",
+      "Description": "An extension to stopifnot() that makes it easy to declare pre and post conditions.",
+      "Imports": "tools",
+      "License": "GPL-3",
+      "NeedsCompilation": "no",
+      "Author": "Hadley Wickham [aut, cre]",
+      "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
       "Repository": "CRAN"
     },
     "bit": {
@@ -991,6 +1036,20 @@
       "Maintainer": "Charlie Gao <charlie.gao@posit.co>",
       "Repository": "CRAN"
     },
+    "lattice": {
+      "Package": "lattice",
+      "Version": "0.22-7",
+      "Source": "Repository",
+      "Title": "Trellis Graphics for R",
+      "Description": "A powerful and elegant high-level data visualization system inspired by Trellis graphics.",
+      "Depends": "R (>= 4.0.0)",
+      "Imports": "grid, grDevices, graphics, stats, utils",
+      "License": "GPL (>= 2)",
+      "NeedsCompilation": "yes",
+      "Author": "Deepayan Sarkar [aut, cre]",
+      "Maintainer": "Deepayan Sarkar <deepayan.sarkar@r-project.org>",
+      "Repository": "CRAN"
+    },
     "lifecycle": {
       "Package": "lifecycle",
       "Version": "1.0.5",
@@ -1510,6 +1569,22 @@
       "NeedsCompilation": "yes",
       "Author": "Hadley Wickham [aut, cre] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Lionel Henry [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
+      "Repository": "CRAN"
+    },
+    "quantmod": {
+      "Package": "quantmod",
+      "Version": "0.4.28",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Quantitative Financial Modelling Framework",
+      "Depends": "R (>= 3.2.0), xts(>= 0.9-0), zoo, TTR(>= 0.2), methods",
+      "Imports": "curl, jsonlite(>= 1.1)",
+      "Description": "Specify, build, trade, and analyse quantitative financial trading strategies.",
+      "License": "GPL-3",
+      "URL": "https://www.quantmod.com/, https://github.com/joshuaulrich/quantmod",
+      "NeedsCompilation": "no",
+      "Author": "Jeffrey A. Ryan [aut, cph], Joshua M. Ulrich [cre, aut]",
+      "Maintainer": "Joshua M. Ulrich <josh.m.ulrich@gmail.com>",
       "Repository": "CRAN"
     },
     "rappdirs": {
@@ -2496,6 +2571,22 @@
       "NeedsCompilation": "no",
       "Author": "Joachim Zuckarelli [aut, cre] (<https://orcid.org/0000-0002-9280-3016>)"
     },
+    "xts": {
+      "Package": "xts",
+      "Version": "0.14.1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "eXtensible Time Series",
+      "Depends": "R (>= 3.6.0), zoo (>= 1.7-12)",
+      "Imports": "methods",
+      "LinkingTo": "zoo",
+      "Description": "Provide for uniform handling of R's different time-based data classes by extending zoo.",
+      "License": "GPL (>= 2)",
+      "NeedsCompilation": "yes",
+      "Author": "Jeffrey A. Ryan [aut, cph], Joshua M. Ulrich [cre, aut]",
+      "Maintainer": "Joshua M. Ulrich <josh.m.ulrich@gmail.com>",
+      "Repository": "CRAN"
+    },
     "zip": {
       "Package": "zip",
       "Version": "2.3.3",
@@ -2522,6 +2613,20 @@
       "NeedsCompilation": "yes",
       "Author": "Gábor Csárdi [aut, cre], Kuba Podgórski [ctb], Rich Geldreich [ctb], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
+      "Repository": "CRAN"
+    },
+    "zoo": {
+      "Package": "zoo",
+      "Version": "1.8-15",
+      "Source": "Repository",
+      "Title": "S3 Infrastructure for Regular and Irregular Time Series",
+      "Depends": "R (>= 3.1.0), stats",
+      "Imports": "utils, graphics, grDevices, lattice (>= 0.20-27)",
+      "Description": "An S3 class with methods for totally ordered indexed observations.",
+      "License": "GPL-2 | GPL-3",
+      "NeedsCompilation": "yes",
+      "Author": "Achim Zeileis [aut, cre], Gabor Grothendieck [aut]",
+      "Maintainer": "Achim Zeileis <Achim.Zeileis@R-project.org>",
       "Repository": "CRAN"
     }
   }

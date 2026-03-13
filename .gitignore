@@ -10,6 +10,7 @@ data/data_manual/*
 data/data_raw/BM_EU.csv
 quarto/
 .secrets
+src/tasks/task_extend_price_caps.R
 
 # Old/archived scripts
 old/
