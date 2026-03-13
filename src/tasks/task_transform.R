@@ -124,7 +124,8 @@ task_transform <- function() {
                 by = c("country", "datetime", "direction"),
                 relationship = "many-to-many") |>
       left_join(price_dam_15m,
-                by = c("datetime" = "hour", "country_code" = "country")) |>
+                by = c("datetime" = "hour", "country_code" = "country"),
+                relationship = "many-to-many") |>
       mutate(energy_activated = replace_na(energy_activated, 0))
 
     spread_hourly <- price_bm |>

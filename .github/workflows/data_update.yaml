@@ -5,8 +5,8 @@ name: Update data (CI — no VPN)
 
 on:
   schedule:
-    # 20:00 UTC on the 1st of each month
-    - cron: "0 20 1 * *"
+    # 20:00 UTC every Saturday
+    - cron: "0 20 * * 6"
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -37,7 +37,7 @@ jobs:
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
       - name: Cache R packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.R_LIBS_USER }}
           key: r-packages-${{ runner.os }}-${{ hashFiles('renv.lock') }}
@@ -95,8 +95,9 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
 
-          git add data/data_raw/*.csv || true
-          git add data/data_output/*.csv || true
+          git add data/data_raw/*.csv 2>/dev/null || true
+          git add data/data_output/*.csv 2>/dev/null || true
+          git add data/data_output/*.parquet 2>/dev/null || true
 
           if ! git diff --staged --quiet; then
             git commit -m "Auto-update data $(date +%Y-%m-%d)"
@@ -109,7 +110,7 @@ jobs:
 
       - name: Trigger blog rebuild
         if: steps.commit.outputs.changed == 'true'
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           # Personal Access Token (classic) with repo scope on the blog repo.
           # Create at https://github.com/settings/tokens and store as
