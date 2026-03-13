@@ -3,14 +3,6 @@
 # Requires Ukrainian IP (VPN) — ua.energy is geo-blocked by Cloudflare
 #============================================================================
 
-library(httr)
-library(rvest)
-library(readxl)
-library(stringr)
-library(dplyr)
-library(tidyr)
-library(lubridate)
-
 #' Check if ua.energy is reachable (i.e. VPN is active)
 #'
 #' @return TRUE if ua.energy responds with HTTP 200, FALSE otherwise

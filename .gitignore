@@ -6,5 +6,10 @@
 .DS_Store
 
 # Large data files
-data/data_raw/*.csv
-data/data_output/*.csv
+data/data_manual/*
+data/data_raw/BM_EU.csv
+quarto/
+.secrets
+
+# Old/archived scripts
+old/

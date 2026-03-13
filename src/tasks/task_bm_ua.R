@@ -14,6 +14,7 @@ task_bm_ua <- function(end_date = lubridate::floor_date(lubridate::today(), "mon
   library(lubridate)
   library(purrr)
   library(httr)
+  library(rvest)
   library(readxl)
   library(stringr)
 

@@ -69,6 +69,16 @@ jobs:
         run: Rscript src/tasks/task_eu.R
         continue-on-error: true
 
+      # ── Market data (Yahoo Finance) ───────────────────────────────────
+
+      - name: Market prices (TTF gas + EUA carbon)
+        run: Rscript src/tasks/task_market_prices.R
+        continue-on-error: true
+
+      - name: UEEX gas (UA)
+        run: Rscript src/tasks/task_ueex_gas.R
+        continue-on-error: true
+
       # ── Transform ──────────────────────────────────────────────────────
 
       - name: Transform data
@@ -78,6 +88,7 @@ jobs:
       # ── Commit ─────────────────────────────────────────────────────────
 
       - name: Commit and push updated data
+        id: commit
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
@@ -88,6 +99,19 @@ jobs:
           if ! git diff --staged --quiet; then
             git commit -m "Auto-update data $(date +%Y-%m-%d)"
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "No changes to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Trigger blog rebuild
+        if: steps.commit.outputs.changed == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          # Personal Access Token (classic) with repo scope on the blog repo.
+          # Create at https://github.com/settings/tokens and store as
+          # secret BLOG_DISPATCH_TOKEN in this (res-yield-data) repo.
+          token: ${{ secrets.BLOG_DISPATCH_TOKEN }}
+          repository: atsokol/energy-blog  # update if blog repo name differs
+          event-type: data-updated

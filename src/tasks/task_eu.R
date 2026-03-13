@@ -18,31 +18,14 @@ task_eu <- function(end_date = lubridate::floor_date(lubridate::today(), "month"
   
   Sys.setenv(ENTSOE_PAT = Sys.getenv("ENTSOE_PAT"))
   
+  source("src/config.R")
   source("src/helpers/csv_utils.R")
   source("src/helpers/download_entsoe.R")
   source("src/helpers/download_bm_entsoe.R")
-  
-  # ── Configuration ──────────────────────────────────────────────────────────
-  zones <- c(
-    PL = "10YPL-AREA-----S",
-    RO = "10YRO-TEL------P",
-    HU = "10YHU-MAVIR----U",
-    SK = "10YSK-SEPS-----K"
-  )
-  
-  gen_types <- c("B16", "B19")
-  
-  zone_pairs <- tibble::tribble(
-    ~from_country, ~to_country, ~from_eic, ~to_eic,
-    "UA", "PL", "10Y1001C--00003F", "10YPL-AREA-----S",
-    "UA", "HU", "10Y1001C--00003F", "10YHU-MAVIR----U",
-    "UA", "RO", "10Y1001C--00003F", "10YRO-TEL------P",
-    "UA", "SK", "10Y1001C--00003F", "10YSK-SEPS-----K",
-    "PL", "UA", "10YPL-AREA-----S", "10Y1001C--00003F",
-    "HU", "UA", "10YHU-MAVIR----U", "10Y1001C--00003F",
-    "RO", "UA", "10YRO-TEL------P", "10Y1001C--00003F",
-    "SK", "UA", "10YSK-SEPS-----K", "10Y1001C--00003F",
-  )
+
+  zones      <- ENTSO_ZONES
+  gen_types  <- ENTSO_GEN_TYPES
+  zone_pairs <- ENTSO_ZONE_PAIRS
   
   results <- list()
   

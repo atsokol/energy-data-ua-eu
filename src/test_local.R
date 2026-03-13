@@ -96,6 +96,30 @@ tests <- list(
     }
   ),
   
+  eu = list(
+    name = "EU data / ENTSO-E (fresh session)",
+    fn = function() {
+      source("src/tasks/task_eu.R")
+      task_eu()
+    }
+  ),
+
+  market_prices = list(
+    name = "Market prices / Yahoo Finance (fresh session)",
+    fn = function() {
+      source("src/tasks/task_market_prices.R")
+      task_market_prices()
+    }
+  ),
+
+  ueex_gas = list(
+    name = "UEEX gas UA (fresh session)",
+    fn = function() {
+      source("src/tasks/task_ueex_gas.R")
+      task_ueex_gas()
+    }
+  ),
+
   transform = list(
     name = "Transform (fresh session)",
     fn = function() {

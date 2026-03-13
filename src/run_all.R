@@ -56,10 +56,28 @@ results$eu <- tryCatch({
 })
 message("")
 
+message("\u2500\u2500 [5] Market prices (TTF gas + EUA carbon) \u2500\u2500")
+results$market_prices <- tryCatch({
+  source("src/tasks/task_market_prices.R")
+  task_market_prices()
+}, error = function(e) {
+  list(task = "market_prices", status = "error", message = e$message)
+})
+message("")
+
+message("\u2500\u2500 [6] UEEX gas prices (UA) \u2500\u2500")
+results$ueex_gas <- tryCatch({
+  source("src/tasks/task_ueex_gas.R")
+  task_ueex_gas()
+}, error = function(e) {
+  list(task = "ueex_gas", status = "error", message = e$message)
+})
+message("")
+
 # ── VPN tasks (local only) ───────────────────────────────────────────────────
 
 if (include_vpn) {
-  message("\u2500\u2500 [5] BM UA (VPN) \u2500\u2500")
+  message("\u2500\u2500 [7] BM UA (VPN) \u2500\u2500")
   results$bm_ua <- tryCatch({
     source("src/tasks/task_bm_ua.R")
     task_bm_ua()
@@ -71,7 +89,7 @@ if (include_vpn) {
 
 # ── Transform (always last) ─────────────────────────────────────────────────
 
-n_task <- if (include_vpn) "[6]" else "[5]"
+n_task <- if (include_vpn) "[8]" else "[7]"
 message("\u2500\u2500 ", n_task, " Transform \u2500\u2500")
 results$transform <- tryCatch({
   source("src/tasks/task_transform.R")
