@@ -5,7 +5,7 @@
 #         scheduled/physical cross-border flows
 #============================================================================
 
-task_eu <- function(end_date = lubridate::floor_date(lubridate::today(), "month") - lubridate::days(1)) {
+task_eu <- function(end_date = lubridate::today() - lubridate::days(1)) {
   
   library(dplyr)
   library(tidyr)

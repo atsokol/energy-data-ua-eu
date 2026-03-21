@@ -2,7 +2,7 @@
 # Task: Download Ukrainian wind yield data
 #============================================================================
 
-task_wind_ua <- function(end_date = lubridate::floor_date(lubridate::today(), "month") - lubridate::days(1)) {
+task_wind_ua <- function(end_date = lubridate::today() - lubridate::days(1)) {
   
   library(dplyr)
   library(tidyr)
