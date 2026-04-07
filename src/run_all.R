@@ -47,7 +47,7 @@ results$wind_ua <- tryCatch({
 })
 message("")
 
-message("\u2500\u2500 [4] EU data \u2500\u2500")
+message("\u2500\u2500 [4] EU gen + load + BM \u2500\u2500")
 results$eu <- tryCatch({
   source("src/tasks/task_eu.R")
   task_eu()
@@ -56,7 +56,25 @@ results$eu <- tryCatch({
 })
 message("")
 
-message("\u2500\u2500 [5] Market prices (TTF gas + EUA carbon) \u2500\u2500")
+message("\u2500\u2500 [5] EU DAM prices \u2500\u2500")
+results$dam_eu <- tryCatch({
+  source("src/tasks/task_dam_eu.R")
+  task_dam_eu()
+}, error = function(e) {
+  list(task = "dam_eu", status = "error", message = e$message)
+})
+message("")
+
+message("\u2500\u2500 [6] EU transmission flows \u2500\u2500")
+results$transm_eu <- tryCatch({
+  source("src/tasks/task_transm_eu.R")
+  task_transm_eu()
+}, error = function(e) {
+  list(task = "transm_eu", status = "error", message = e$message)
+})
+message("")
+
+message("\u2500\u2500 [7] Market prices (TTF gas + EUA carbon) \u2500\u2500")
 results$market_prices <- tryCatch({
   source("src/tasks/task_market_prices.R")
   task_market_prices()
@@ -65,7 +83,7 @@ results$market_prices <- tryCatch({
 })
 message("")
 
-message("\u2500\u2500 [6] UEEX gas prices (UA) \u2500\u2500")
+message("\u2500\u2500 [8] UEEX gas prices (UA) \u2500\u2500")
 results$ueex_gas <- tryCatch({
   source("src/tasks/task_ueex_gas.R")
   task_ueex_gas()
@@ -77,7 +95,7 @@ message("")
 # ── VPN tasks (local only) ───────────────────────────────────────────────────
 
 if (include_vpn) {
-  message("\u2500\u2500 [7] BM UA (VPN) \u2500\u2500")
+  message("\u2500\u2500 [9] BM UA (VPN) \u2500\u2500")
   results$bm_ua <- tryCatch({
     source("src/tasks/task_bm_ua.R")
     task_bm_ua()
@@ -89,7 +107,7 @@ if (include_vpn) {
 
 # ── Transform (always last) ─────────────────────────────────────────────────
 
-n_task <- if (include_vpn) "[8]" else "[7]"
+n_task <- if (include_vpn) "[10]" else "[9]"
 message("\u2500\u2500 ", n_task, " Transform \u2500\u2500")
 results$transform <- tryCatch({
   source("src/tasks/task_transform.R")

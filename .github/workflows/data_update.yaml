@@ -67,8 +67,16 @@ jobs:
 
       # ── EU tasks (ENTSO-E Transparency) ─────────────────────────────────
 
-      - name: EU data (ENTSO-E)
+      - name: EU gen + load + BM (ENTSO-E)
         run: Rscript src/tasks/task_eu.R
+        continue-on-error: true
+
+      - name: EU DAM prices hourly + 15min (ENTSO-E)
+        run: Rscript src/tasks/task_dam_eu.R
+        continue-on-error: true
+
+      - name: EU transmission flows sched + phys (ENTSO-E)
+        run: Rscript src/tasks/task_transm_eu.R
         continue-on-error: true
 
       # ── Market data (Yahoo Finance) ───────────────────────────────────
