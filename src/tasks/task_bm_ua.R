@@ -1,9 +1,6 @@
 #============================================================================
 # Task: Download Ukrainian Balancing Market data from ua.energy
-#
-# REQUIRES VPN (Ukrainian IP) — ua.energy is geo-blocked by Cloudflare.
-# This task is NOT included in the GitHub Actions workflow.
-# Run locally via:  Rscript src/run_local_vpn.R
+# No VPN required — accessible via plain httr.
 #============================================================================
 
 task_bm_ua <- function(end_date = lubridate::floor_date(lubridate::today(), "month") - lubridate::days(1)) {
@@ -24,14 +21,6 @@ task_bm_ua <- function(end_date = lubridate::floor_date(lubridate::today(), "mon
 
   bm_filepath  <- "data/data_raw/BM_UA.csv"
   dam_filepath <- "data/data_raw/DAM_UA.csv"
-
-  # ── Check connectivity ──────────────────────────────────────────────────
-  if (!check_ua_energy_access()) {
-    return(list(
-      task = "bm_ua", status = "error",
-      message = "ua.energy not reachable — activate Ukrainian VPN first"
-    ))
-  }
 
   # ── Determine date range ────────────────────────────────────────────────
   start_date <- get_start_date_monthly(bm_filepath, date_col = "date",

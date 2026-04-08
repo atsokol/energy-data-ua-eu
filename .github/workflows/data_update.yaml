@@ -1,12 +1,9 @@
-name: Update data (CI — no VPN)
-# Downloads data from public APIs that do NOT require a Ukrainian IP.
-# BM_UA (ua.energy) is geo-blocked and must be updated locally
-# via: Rscript src/run_local_vpn.R
+name: Update data
 
 on:
   schedule:
-    # 20:00 UTC every Saturday
-    - cron: "0 20 * * 6"
+    # 20:00 UTC daily
+    - cron: "0 20 * * *"
   workflow_dispatch:
 
 permissions:
@@ -19,6 +16,7 @@ jobs:
     env:
       ENTSOE_PAT: ${{ secrets.ENTSOE_PAT }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      JAO_TOKEN: ${{ secrets.JAO_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -34,7 +32,9 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev \
+            chromium-browser
+          echo "CHROMOTE_CHROME=$(which chromium-browser)" >> "$GITHUB_ENV"
 
       - name: Cache R packages
         uses: actions/cache@v5
@@ -51,10 +51,22 @@ jobs:
           renv::restore()
         shell: Rscript {0}
 
-      # ── UA tasks (public APIs — no VPN) ─────────────────────────────────
+      # ── UA tasks ─────────────────────────────────────────────────────────
 
       - name: DAM UA (oree.com.ua)
         run: Rscript src/tasks/task_dam_ua.R
+        continue-on-error: true
+
+      - name: BM UA (ua.energy)
+        run: Rscript src/tasks/task_bm_ua.R
+        continue-on-error: true
+
+      - name: Auction UA daily (ua.energy)
+        run: Rscript src/tasks/task_auction_ua.R
+        continue-on-error: true
+
+      - name: Auction JAO (UA corridors)
+        run: Rscript src/tasks/task_auction_jao.R
         continue-on-error: true
 
       - name: Solar UA (gpee.com.ua)

@@ -25,10 +25,12 @@ ENTSO_ZONE_PAIRS <- tibble::tribble(
   "UA",          "HU",        UA_EIC,              "10YHU-MAVIR----U",
   "UA",          "RO",        UA_EIC,              "10YRO-TEL------P",
   "UA",          "SK",        UA_EIC,              "10YSK-SEPS-----K",
+  "UA",          "MD",        UA_EIC,              "10Y1001A1001A990",
   "PL",          "UA",        "10YPL-AREA-----S",  UA_EIC,
   "HU",          "UA",        "10YHU-MAVIR----U",  UA_EIC,
   "RO",          "UA",        "10YRO-TEL------P",  UA_EIC,
   "SK",          "UA",        "10YSK-SEPS-----K",  UA_EIC,
+  "MD",          "UA",        "10Y1001A1001A990",  UA_EIC,
 )
 
 # Generation types to download (Solar = B16, Wind Onshore = B19)

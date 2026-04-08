@@ -120,6 +120,22 @@ tests <- list(
     }
   ),
 
+  auction_ua = list(
+    name = "Auction UA / Ukrenergo (fresh session)",
+    fn = function() {
+      source("src/tasks/task_auction_ua.R")
+      task_auction_ua()
+    }
+  ),
+
+  auction_jao = list(
+    name = "Auction JAO / UA corridors (fresh session)",
+    fn = function() {
+      source("src/tasks/task_auction_jao.R")
+      task_auction_jao()
+    }
+  ),
+
   transform = list(
     name = "Transform (fresh session)",
     fn = function() {
@@ -158,7 +174,8 @@ for (test_name in names(tests)) {
       show = TRUE,      # Show output in real time
       env = c(
         ENTSOE_PAT = Sys.getenv("ENTSOE_PAT"),
-        GITHUB_PAT = Sys.getenv("GITHUB_PAT")
+        GITHUB_PAT = Sys.getenv("GITHUB_PAT"),
+        JAO_TOKEN  = Sys.getenv("JAO_TOKEN")
       )
     )
   }, error = function(e) {
