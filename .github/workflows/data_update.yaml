@@ -17,6 +17,7 @@ jobs:
       ENTSOE_PAT: ${{ secrets.ENTSOE_PAT }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       JAO_TOKEN: ${{ secrets.JAO_TOKEN }}
+      RUNNER_IMAGE_VERSION: ""  # populated at runtime by "Get runner image version" step
 
     steps:
       - name: Checkout repository
@@ -36,12 +37,18 @@ jobs:
             chromium-browser
           echo "CHROMOTE_CHROME=$(which chromium-browser)" >> "$GITHUB_ENV"
 
+      - name: Get runner image version
+        run: printf 'RUNNER_IMAGE_VERSION=%s\n' "${ImageVersion:-$(date +%Y-wk%U)}" >> "$GITHUB_ENV"
+
       - name: Cache R packages
         uses: actions/cache@v5
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: r-packages-${{ runner.os }}-${{ hashFiles('renv.lock') }}
+          # RUNNER_IMAGE_VERSION ties the cache to the runner image, so
+          # compiled .so files are never reused after a runner image update.
+          key: r-packages-${{ runner.os }}-${{ env.RUNNER_IMAGE_VERSION }}-${{ hashFiles('renv.lock') }}
           restore-keys: |
+            r-packages-${{ runner.os }}-${{ env.RUNNER_IMAGE_VERSION }}-
             r-packages-${{ runner.os }}-
 
       - name: Install R packages
