@@ -2,8 +2,8 @@ name: Update data
 
 on:
   schedule:
-    # 20:00 UTC daily
-    - cron: "0 20 * * *"
+    # Monday 08:00 CET (07:00 UTC)
+    - cron: "0 7 * * 1"
   workflow_dispatch:
 
 permissions:
