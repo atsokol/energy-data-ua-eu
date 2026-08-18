@@ -92,10 +92,19 @@ results$ueex_gas <- tryCatch({
 })
 message("")
 
+message("── [9] PSE Poland (PV curtailment + KSE load) ──")
+results$pse_pl <- tryCatch({
+  source("src/tasks/task_pse_pl.R")
+  task_pse_pl()
+}, error = function(e) {
+  list(task = "pse_pl", status = "error", message = e$message)
+})
+message("")
+
 # ── VPN tasks (local only) ───────────────────────────────────────────────────
 
 if (include_vpn) {
-  message("\u2500\u2500 [9] BM UA (VPN) \u2500\u2500")
+  message("\u2500\u2500 [10] BM UA (VPN) \u2500\u2500")
   results$bm_ua <- tryCatch({
     source("src/tasks/task_bm_ua.R")
     task_bm_ua()
@@ -103,11 +112,20 @@ if (include_vpn) {
     list(task = "bm_ua", status = "error", message = e$message)
   })
   message("")
+
+  message("\u2500\u2500 [11] Imbalance UA (VPN) \u2500\u2500")
+  results$imbalance_ua <- tryCatch({
+    source("src/tasks/task_imbalance_ua.R")
+    task_imbalance_ua()
+  }, error = function(e) {
+    list(task = "imbalance_ua", status = "error", message = e$message)
+  })
+  message("")
 }
 
 # ── Transform (always last) ─────────────────────────────────────────────────
 
-n_task <- if (include_vpn) "[10]" else "[9]"
+n_task <- if (include_vpn) "[12]" else "[10]"
 message("\u2500\u2500 ", n_task, " Transform \u2500\u2500")
 results$transform <- tryCatch({
   source("src/tasks/task_transform.R")

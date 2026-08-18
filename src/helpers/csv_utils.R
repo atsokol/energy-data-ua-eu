@@ -114,7 +114,19 @@ update_csv <- function(new_data, filepath, start_date, end_date,
       if (length(extra_cols) > 0) {
         warning("  New data has extra columns: ", paste(extra_cols, collapse = ", "))
       }
-      
+
+      # Align column types: cast mismatched columns to character so bind_rows
+      # doesn't fail when readr auto-parses a type differently from the API
+      common_cols <- intersect(names(existing_data), names(new_data))
+      for (col in common_cols) {
+        e_cls <- class(existing_data[[col]])[1]
+        n_cls <- class(new_data[[col]])[1]
+        if (e_cls != n_cls) {
+          existing_data[[col]] <- as.character(existing_data[[col]])
+          new_data[[col]]      <- as.character(new_data[[col]])
+        }
+      }
+
       # Remove existing rows from start_date onward
       existing_data <- existing_data |>
         dplyr::filter(as.Date(.data[[datetime_col]]) < start_date)

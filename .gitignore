@@ -14,3 +14,5 @@ src/tasks/task_extend_price_caps.R
 
 # Old/archived scripts
 old/
+
+/.quarto/

@@ -8,6 +8,10 @@
 # Used as fallback start date when a CSV does not yet exist
 DEFAULT_START_DATE <- as.Date("2022-01-01")
 
+# ── PSE S.A. (Poland) ────────────────────────────────────────────────────────
+# New reporting portal launched 2024-09-27; no API data exists before this date
+PSE_START_DATE <- as.Date("2024-09-27")
+
 # ── ENTSO-E zone EIC codes ───────────────────────────────────────────────────
 ENTSO_ZONES <- c(
   PL = "10YPL-AREA-----S",
