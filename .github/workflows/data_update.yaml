@@ -79,6 +79,10 @@ jobs:
         run: Rscript src/tasks/task_bm_ua.R
         continue-on-error: true
 
+      - name: Imbalance UA (ua.energy)
+        run: Rscript src/tasks/task_imbalance_ua.R
+        continue-on-error: true
+
       - name: Auction UA daily (ua.energy)
         run: Rscript src/tasks/task_auction_ua.R
         continue-on-error: true
